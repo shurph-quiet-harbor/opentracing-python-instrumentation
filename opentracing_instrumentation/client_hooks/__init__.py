@@ -19,7 +19,11 @@
 # THE SOFTWARE.
 from __future__ import absolute_import
 
-from collections import Sequence
+import six
+if six.PY2:
+    from collections import Sequence
+else:
+    from collections.abc import Sequence
 
 import importlib
 import logging
@@ -27,7 +31,7 @@ import logging
 import six
 
 
-def install_all_patches():
+def install_all_patches(requests_response_handler_hook=None):
     """
     A convenience method that installs all available hooks.
 
@@ -49,7 +53,9 @@ def install_all_patches():
     tornado_http.install_patches()
     urllib.install_patches()
     urllib2.install_patches()
-    requests.install_patches()
+    requests.install_patches(
+        response_handler_hook=requests_response_handler_hook
+    )
 
 
 def install_patches(patchers='all'):

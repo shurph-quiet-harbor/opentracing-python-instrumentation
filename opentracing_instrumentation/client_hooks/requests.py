@@ -44,11 +44,8 @@ else:
 
 
 @singleton
-def install_patches():
-    try:
-        import requests.sessions
-        import requests.adapters
-    except ImportError:  # pragma: no cover
+def install_patches(response_handler_hook=None):
+    if '_HTTPAdapter_send' not in globals():
         return
 
     def send_wrapper(self, request, **kwargs):
@@ -62,6 +59,8 @@ def install_patches():
             resp = _HTTPAdapter_send(self, request, **kwargs)
             if hasattr(resp, 'status_code') and resp.status_code is not None:
                 span.set_tag('http.status_code', resp.status_code)
+            if response_handler_hook is not None:
+                response_handler_hook(resp, span)
         return resp
 
     class RequestWrapper(AbstractRequestWrapper):
@@ -94,3 +93,9 @@ def install_patches():
                                        scheme=self.scheme)
 
     requests.adapters.HTTPAdapter.send = send_wrapper
+
+
+def reset_patches():
+    if '_HTTPAdapter_send' in globals():
+        requests.adapters.HTTPAdapter.send = _HTTPAdapter_send
+        install_patches.reset()

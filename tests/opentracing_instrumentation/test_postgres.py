@@ -19,21 +19,11 @@
 # THE SOFTWARE.
 
 from builtins import object
-import random
 
 import psycopg2 as psycopg2_client
-
-from basictracer import BasicTracer
-from basictracer.recorder import InMemoryRecorder
-import opentracing
-from opentracing.ext import tags
-
-from opentracing_instrumentation.client_hooks import _dbapi2
-from opentracing_instrumentation.client_hooks import psycopg2
-
+import pytest
 from sqlalchemy import (
     Column,
-    ForeignKey,
     Integer,
     MetaData,
     String,
@@ -42,7 +32,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import mapper, sessionmaker
 
-import pytest
+from opentracing_instrumentation.client_hooks import psycopg2
 
 
 POSTGRES_CONNECTION_STRING = 'postgresql://localhost/travis_ci_test'
@@ -69,18 +59,6 @@ def session():
 @pytest.fixture(autouse=True)
 def patch_postgres():
     psycopg2.install_patches()
-
-
-@pytest.fixture()
-def tracer():
-    t = BasicTracer(recorder=InMemoryRecorder())
-    old_tracer = opentracing.tracer
-    opentracing.tracer = t
-
-    try:
-        yield t
-    except:
-        opentracing.tracer = old_tracer
 
 
 metadata = MetaData()

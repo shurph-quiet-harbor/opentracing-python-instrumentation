@@ -3,10 +3,21 @@
 History
 -------
 
-2.4.4 (unreleased)
+2.5.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add optional ``response_handler_hook`` to ``opentracing_instrumentation.client_hooks.requests.install_patches``
+- Add test for the requests
+- Update the requirements
+- Add support for Python 3.7
+- Drop support of Python 3.3
+- Fix some deprecation warnings
+- Fix flake8 warnings
+- Add .tox.ini
+- Update setup.cfg
+- Unify tracer fixture and move it to conftest.py
+- Simplify the singleton decorator
+- Fix ``opentracing_instrumentation.client_hooks.strict_redis.reset_patches`` method
 
 
 2.4.3 (2018-08-24)
