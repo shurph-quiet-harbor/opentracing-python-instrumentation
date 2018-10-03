@@ -6,6 +6,7 @@ History
 2.5.0 (unreleased)
 ------------------
 
+- Add handling for ``psycopg2.extensions.register_type``
 - Add optional ``response_handler_hook`` to ``opentracing_instrumentation.client_hooks.requests.install_patches``
 - Add test for the requests
 - Update the requirements
