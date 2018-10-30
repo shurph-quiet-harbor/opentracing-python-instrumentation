@@ -41,6 +41,8 @@ setup(
     ],
     extras_require={
         'tests': [
+            'boto3',
+            'botocore',
             'coveralls',
             'doubles',
             'flake8',
