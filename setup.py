@@ -41,6 +41,8 @@ setup(
     ],
     extras_require={
         'tests': [
+            'boto3',
+            'botocore',
             'coveralls',
             'doubles',
             'flake8',
@@ -57,6 +59,16 @@ setup(
             'redis',
             'Sphinx',
             'sphinx_rtd_theme',
+        ],
+
+        # Currently, moto doesn't support latest boto3/botocore:
+        # https://github.com/spulec/moto/pull/1847
+        # https://github.com/spulec/moto/pull/1907
+        # You are still able to install moto and test boto3
+        # instrumentation with it to avoid running of DynamoDB,
+        # but it will downgrade boto3/botocore.
+        'tests_moto': [
+            'moto',
         ]
     },
 )

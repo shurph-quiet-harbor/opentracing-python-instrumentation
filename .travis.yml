@@ -17,15 +17,21 @@ install:
   - make install-ci
 
 services:
+  - docker
   - postgresql
   - redis
 
 before_script:
+  - docker run -d -p 8000:8000 dwmkerr/dynamodb
+  - sleep 1  # let DynamoDB start
   - psql -c 'create database travis_ci_test;' -U postgres
+
+  # workaround for Travis CI issue #7940
+  # https://github.com/travis-ci/travis-ci/issues/7940
+  - sudo rm -f /etc/boto.cfg
 
 script:
   - make test lint
 
 after_success:
   if [ "$COVER" = "1" ]; then coveralls -v ; fi
-
