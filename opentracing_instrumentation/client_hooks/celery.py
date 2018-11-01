@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from distutils.version import LooseVersion
+
 import opentracing
 from opentracing.ext import tags
 
@@ -8,12 +10,21 @@ from ._singleton import singleton
 
 
 try:
+    import celery
     from celery.app.task import Task
     from celery.signals import before_task_publish, task_prerun, task_postrun
 except ImportError:  # pragma: no cover
     pass
 else:
     _task_apply_async = Task.apply_async
+    if LooseVersion(celery.__version__) >= LooseVersion('4'):
+        def get_parent_span_context(request):
+            return getattr(request, 'parent_span_context', None)
+    else:
+        def get_parent_span_context(request):
+            return request.headers and request.headers.get(
+                'parent_span_context'
+            )
 
 
 def set_common_tags(span, task, span_kind):
@@ -37,7 +48,7 @@ def task_prerun_handler(task, task_id, **kwargs):
     if request.delivery_info.get('is_eager'):
         child_of = get_current_span()
     else:
-        parent_span_context = getattr(request, 'parent_span_context', None)
+        parent_span_context = get_parent_span_context(request)
         if parent_span_context:
             child_of = opentracing.tracer.extract(
                 opentracing.Format.TEXT_MAP, parent_span_context

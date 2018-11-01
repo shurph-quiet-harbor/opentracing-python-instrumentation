@@ -1,3 +1,4 @@
+import celery as celery_module
 import mock
 import pytest
 
@@ -5,6 +6,7 @@ from celery import Celery
 from celery.signals import (
     after_task_publish, before_task_publish, task_prerun, task_postrun
 )
+from distutils.version import LooseVersion
 from kombu import Connection
 from opentracing.ext import tags
 
@@ -76,15 +78,18 @@ def test_celery_with_rabbitmq(tracer):
 
         @task_postrun.connect
         def stop_worker_soon(**kwargs):
-            def stop_worker():
-                # avoiding AttributeError that makes tests noisy
-                worker.consumer.connection.drain_events = mock.Mock()
+            if LooseVersion(celery_module.__version__) >= LooseVersion('4'):
+                def stop_worker():
+                    # avoiding AttributeError that makes tests noisy
+                    worker.consumer.connection.drain_events = mock.Mock()
 
+                    worker.stop()
+
+                # worker must be stopped not earlier than
+                # data exchange with RabbitMQ is completed
+                worker.consumer._pending_operations.insert(0, stop_worker)
+            else:
                 worker.stop()
-
-            # worker must be stopped not earlier than
-            # data exchange with RabbitMQ is completed
-            worker.consumer._pending_operations.insert(0, stop_worker)
 
         worker.start()
 
@@ -94,7 +99,10 @@ def test_celery_with_rabbitmq(tracer):
 @pytest.fixture
 def celery_eager():
     celery = Celery('test')
-    celery.config_from_object({'task_always_eager': True})
+    celery.config_from_object({
+        'task_always_eager': True,  # Celery 4.x
+        'CELERY_ALWAYS_EAGER': True,  # Celery 3.x
+    })
     return celery
 
 
