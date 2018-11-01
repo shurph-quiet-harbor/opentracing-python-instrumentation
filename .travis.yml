@@ -22,8 +22,9 @@ services:
   - redis
 
 before_script:
+  - docker run -d -p 5672:5672 rabbitmq
   - docker run -d -p 8000:8000 dwmkerr/dynamodb
-  - sleep 1  # let DynamoDB start
+  - sleep 5  # let RabbitMQ and DynamoDB start
   - psql -c 'create database travis_ci_test;' -U postgres
 
   # workaround for Travis CI issue #7940

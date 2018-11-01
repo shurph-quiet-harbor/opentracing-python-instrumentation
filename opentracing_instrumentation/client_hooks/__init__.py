@@ -38,6 +38,7 @@ def install_all_patches(requests_response_handler_hook=None):
     If a specific module is not available on the path, it is ignored.
     """
     from . import boto3
+    from . import celery
     from . import mysqldb
     from . import psycopg2
     from . import strict_redis
@@ -48,6 +49,7 @@ def install_all_patches(requests_response_handler_hook=None):
     from . import requests
 
     boto3.install_patches()
+    celery.install_patches()
     mysqldb.install_patches()
     psycopg2.install_patches()
     strict_redis.install_patches()
