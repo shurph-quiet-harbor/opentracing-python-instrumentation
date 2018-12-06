@@ -51,7 +51,11 @@ setup(
             'mock',
             'psycopg2-binary',
             'sqlalchemy>=1.2.0',
-            'pytest>=3.0.0',
+
+            # pytest-tornado isn't compatible with pytest>=4.0.0,
+            # see https://github.com/eugeniy/pytest-tornado/pull/38
+            'pytest>=3.0.0,<4.0.0',
+
             'pytest-cov',
             'pytest-localserver',
             'pytest-mock',

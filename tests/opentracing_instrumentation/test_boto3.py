@@ -1,3 +1,5 @@
+import datetime
+
 import boto3
 import mock
 import pytest
@@ -74,17 +76,17 @@ def patch_boto3():
         boto3_hooks.reset_patches()
 
 
+def assert_last_span(operation, tracer, response=None):
+    span = tracer.recorder.get_spans()[-1]
+    request_id = response and response['ResponseMetadata']['RequestId']
+    assert span.operation_name == 'boto3:dynamodb:' + operation
+    assert span.tags.get(tags.SPAN_KIND) == tags.SPAN_KIND_RPC_CLIENT
+    assert span.tags.get(tags.COMPONENT) == 'boto3'
+    assert span.tags.get('boto3.service_name') == 'dynamodb'
+    assert span.tags.get('aws.request_id') == request_id
+
+
 def _test(dynamodb, tracer):
-
-    def assert_last_span(operation):
-        span = tracer.recorder.get_spans()[-1]
-        request_id = response['ResponseMetadata']['RequestId']
-        assert span.operation_name == 'boto3:dynamodb:' + operation
-        assert span.tags.get(tags.SPAN_KIND) == tags.SPAN_KIND_RPC_CLIENT
-        assert span.tags.get(tags.COMPONENT) == 'boto3'
-        assert span.tags.get('boto3.service_name') == 'dynamodb'
-        assert span.tags.get('aws.request_id') == request_id
-
     users = dynamodb.Table('users')
 
     response = users.put_item(Item={
@@ -92,19 +94,23 @@ def _test(dynamodb, tracer):
         'first_name': 'Jane',
         'last_name': 'Doe',
     })
-    assert_last_span('put_item')
+    assert_last_span('put_item', tracer, response)
 
     response = users.get_item(Key={'username': 'janedoe'})
     user = response['Item']
     assert user['first_name'] == 'Jane'
     assert user['last_name'] == 'Doe'
-    assert_last_span('get_item')
+    assert_last_span('get_item', tracer, response)
 
     try:
         dynamodb.Table('test').delete_item(Key={'username': 'janedoe'})
     except ClientError as error:
         response = error.response
-    assert_last_span('delete_item')
+    assert_last_span('delete_item', tracer, response)
+
+    response = users.creation_date_time
+    assert isinstance(response, datetime.datetime)
+    assert_last_span('describe_table', tracer)
 
 
 def is_dynamodb_running():

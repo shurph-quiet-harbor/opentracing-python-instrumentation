@@ -23,8 +23,12 @@ def install_patches():
         return
 
     def set_request_id_tag(span, response):
-        span.set_tag('aws.request_id',
-                     response['ResponseMetadata']['RequestId'])
+        metadata = response.get('ResponseMetadata')
+
+        # there is no ResponseMetadata for
+        # boto3:dynamodb:describe_table
+        if metadata:
+            span.set_tag('aws.request_id', metadata['RequestId'])
 
     def call_wrapper(self, parent, *args, **kwargs):
         """Wraps ServiceAction.__call__"""
