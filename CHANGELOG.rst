@@ -19,6 +19,7 @@ History
 - Clean up imports
 - Add ability to set ``response_handler_hook`` using ``set_response_handler_hook`` method of ``RequestsPatcher``
 - Fix ``opentracing_instrumentation.client_hooks.strict_redis.reset_patches`` method
+- Fix compatibility with Peewee ORM
 
 
 2.4.3 (2018-08-24)
